@@ -1,0 +1,30 @@
+---
+- hosts: check
+  strategy: free
+  tasks:
+    - name: Check all port numbers are accessible from current host
+      wait_for:
+          port: "{{ item }}"
+          state: started         # Port should be open
+          delay: 0               # No wait before first check (sec)
+          timeout: 3             # Stop checking after timeout (sec)
+      ignore_errors: yes
+      with_items:
+          - 443
+          - 80
+          - 10100
+          - 12345
+      register: result
+    - debug:
+        msg: Completed "{{ ansible_default_ipv4.address }} {{ item.item }}"
+      when: item is failed
+      with_items: "{{ result.results }}"
+
+    - lineinfile: 
+         create: yes
+         dest: "{{ playbook_dir }}/ips"
+         insertafter: '^[deploy]$'
+         line: "{{ ansible_default_ipv4.address }}:{{ item.item }}" 
+         state: present
+      delegate_to: localhost
+      with_items: "{{ result.results }}"

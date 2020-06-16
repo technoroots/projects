@@ -1,0 +1,13 @@
+---
+- hosts: deploy
+  gather_facts: no
+  vars:
+      _443: app1
+      _80: app2
+  strategy: free
+  tasks:
+    - debug:
+        msg: Hii
+  roles:
+    - "{{ hostvars[deploy].ansible_host }}"
+
